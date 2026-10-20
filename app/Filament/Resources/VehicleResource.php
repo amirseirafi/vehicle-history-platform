@@ -35,6 +35,26 @@ class VehicleResource extends Resource
         return 'خودروها';
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->canWorkWithVehicles() === true;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->canWorkWithVehicles() === true;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->canWorkWithVehicles() === true;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->canManageSystem() === true;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([

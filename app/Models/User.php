@@ -38,4 +38,33 @@ class User extends Authenticatable
     {
         return $this->belongsTo(InspectionCenter::class);
     }
+    
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isCenterManager(): bool
+    {
+        return $this->role === 'center_manager';
+    }
+
+    public function isInspector(): bool
+    {
+        return $this->role === 'inspector';
+    }
+
+    public function canManageSystem(): bool
+    {
+        return $this->isAdmin();
+    }
+
+    public function canWorkWithVehicles(): bool
+    {
+        return in_array($this->role, [
+            'admin',
+            'center_manager',
+            'inspector',
+        ], true);
+    }
 }

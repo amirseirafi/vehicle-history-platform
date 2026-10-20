@@ -37,6 +37,26 @@ class UserResource extends Resource
         return 'کاربران';
     }
 
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->canManageSystem() === true;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->canManageSystem() === true;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->canManageSystem() === true;
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->canManageSystem() === true;
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
