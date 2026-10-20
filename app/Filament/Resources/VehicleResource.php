@@ -46,7 +46,14 @@ class VehicleResource extends Resource
                         ->minLength(17)
                         ->unique(ignoreRecord: true)
                         ->alphaNum()
-                        ->upper()
+                        ->dehydrateStateUsing(
+                            fn (?string $state): ?string => $state === null
+                                ? null
+                                : strtoupper(trim($state))
+                        )
+                        ->extraInputAttributes([
+                            'style' => 'text-transform: uppercase',
+                        ])
                         ->helperText('شماره VIN معمولاً ۱۷ کاراکتر است.'),
 
                     TextInput::make('chassis_number')
