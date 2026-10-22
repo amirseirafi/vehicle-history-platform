@@ -68,29 +68,8 @@ class VehicleResource extends Resource
                         ->maxLength(17)
                         ->minLength(17)
                         ->alphaNum()
-                        ->rules([
-                            function (
-                                string $attribute,
-                                mixed $value,
-                                \Closure $fail
-                            ): void {
-                                if (blank($value)) {
-                                    return;
-                                }
-
-                                $vin = strtoupper(trim((string) $value));
-
-                                $exists = Vehicle::query()
-                                    ->whereRaw('LOWER(vin) = LOWER(?)', [$vin])
-                                    ->exists();
-
-                                if ($exists) {
-                                    $fail(
-                                        'این VIN تکراری است؛ این خودرو قبلاً در سیستم وجود دارد.'
-                                    );
-                                }
-                            },
-                        ])
+                        ->regex('/^[A-Za-z0-9]{17}$/')
+                        ->unique(ignoreRecord: true)
                         ->dehydrateStateUsing(
                             fn (?string $state): ?string => $state === null
                                 ? null
@@ -246,46 +225,6 @@ class VehicleResource extends Resource
                                 ? self::currentJalaliYear() + 1
                                 : now()->year + 1
                         )
-                        ->rules([
-                            function (Get $get): \Closure {
-                                return function (
-                                    string $attribute,
-                                    mixed $value,
-                                    \Closure $fail
-                                ) use ($get): void {
-                                    $type = $get('manufacture_type');
-                                    $year = (int) $value;
-
-                                    if ($type === 'imported') {
-                                        if ($year < 1900 || $year > now()->year + 1) {
-                                            $fail(
-                                                'برای خودروی وارداتی، سال باید میلادی و بین ۱۹۰۰ تا '
-                                                . (now()->year + 1)
-                                                . ' باشد.'
-                                            );
-                                        }
-
-                                        return;
-                                    }
-
-                                    if ($type === 'domestic') {
-                                        $maxJalali = self::currentJalaliYear() + 1;
-
-                                        if ($year < 1300 || $year > $maxJalali) {
-                                            $fail(
-                                                'برای خودروی تولید داخل، سال باید شمسی و بین ۱۳۰۰ تا '
-                                                . $maxJalali
-                                                . ' باشد.'
-                                            );
-                                        }
-
-                                        return;
-                                    }
-
-                                    $fail('ابتدا نوع تولید خودرو را انتخاب کنید.');
-                                };
-                            },
-                        ])
                         ->helperText(
                             fn (Get $get): string => $get('manufacture_type') === 'domestic'
                                 ? 'سال را به شمسی وارد کنید؛ مثال: ۱۴۰۵'
@@ -302,12 +241,12 @@ class VehicleResource extends Resource
                         ->native(false)
                         ->live()
                         ->placeholder('رنگ خودرو را انتخاب کنید'),
-                    TextInput::make('custom_color')
-                        ->label('رنگ سفارشی')
+                    TextInput::make('color_other')
+                        ->label('رنگ جدید')
                         ->maxLength(50)
                         ->visible(
                             fn (Get $get): bool => $get('color') === 'other'
-                                || filled($get('custom_color'))
+                                || filled($get('color_other'))
                         )
                         ->required(fn (Get $get): bool => $get('color') === 'other')
                         ->live()
@@ -420,29 +359,26 @@ class VehicleResource extends Resource
     private static function colorOptions(): array
     {
         return [
-            'solid_white' => 'سفید ساده',
-            'pearl_white' => 'سفید صدفی',
-            'solid_black' => 'مشکی ساده',
-            'metallic_black' => 'مشکی متالیک',
-            'metallic_silver' => 'نقره‌ای متالیک',
-            'gray' => 'خاکستری',
-            'metallic_gray' => 'خاکستری متالیک',
-            'metallic_dark_gray' => 'خاکستری تیره متالیک',
-            'cream' => 'کرم',
-            'beige' => 'بژ',
-            'gold' => 'طلایی',
-            'brown' => 'قهوه‌ای',
-            'red' => 'قرمز',
-            'dark_red' => 'زرشکی',
-            'blue' => 'آبی',
-            'dark_blue' => 'سرمه‌ای',
-            'light_blue' => 'آبی روشن',
-            'green' => 'سبز',
-            'dark_green' => 'سبز تیره',
-            'yellow' => 'زرد',
-            'orange' => 'نارنجی',
-            'purple' => 'بنفش',
-            'other' => 'سایر',
+            'سفید' => 'سفید',
+            'سفید صدفی' => 'سفید صدفی',
+            'مشکی' => 'مشکی',
+            'نقره‌ای' => 'نقره‌ای',
+            'خاکستری' => 'خاکستری',
+            'دودی' => 'دودی',
+            'آبی' => 'آبی',
+            'سرمه‌ای' => 'سرمه‌ای',
+            'قرمز' => 'قرمز',
+            'زرشکی' => 'زرشکی',
+            'قهوه‌ای' => 'قهوه‌ای',
+            'کرم' => 'کرم',
+            'طلایی' => 'طلایی',
+            'نارنجی' => 'نارنجی',
+            'زرد' => 'زرد',
+            'سبز' => 'سبز',
+            'بنفش' => 'بنفش',
+            'صورتی' => 'صورتی',
+            'مسی' => 'مسی',
+            'سایر' => 'other',
         ];
     }
 
