@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehicle extends Model
@@ -18,13 +19,22 @@ class Vehicle extends Model
         'trim',
         'body_style',
 
+        'manufacture_type',
+        'manufacture_year',
+
         'manufacture_year_gregorian',
         'manufacture_year_jalali',
 
+        // ستون قدیمی برای سازگاری موقت
         'color',
+
+        // ساختار جدید رنگ
+        'color_id',
+        'custom_color',
+
         'engine_number',
 
-        // فیلد قدیمی؛ برای سازگاری با اطلاعات قبلی حفظ می‌شود.
+        // ستون قدیمی پلاک
         'plate_number',
 
         // اجزای پلاک ایران
@@ -33,16 +43,25 @@ class Vehicle extends Model
         'plate_letter',
         'plate_two_digits',
 
+        // فعلاً در مدل باقی می‌ماند؛
+        // در فرم ثبت خودرو استفاده نخواهد شد.
         'current_mileage',
     ];
 
     protected function casts(): array
     {
         return [
+            'manufacture_type' => 'string',
+            'manufacture_year' => 'integer',
             'manufacture_year_gregorian' => 'integer',
             'manufacture_year_jalali' => 'integer',
             'current_mileage' => 'integer',
         ];
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(VehicleColor::class, 'color_id');
     }
 
     public function inspectionReports(): HasMany
@@ -50,10 +69,15 @@ class Vehicle extends Model
         return $this->hasMany(InspectionReport::class);
     }
 
-    /**
-     * نمایش پلاک به شکل:
-     * ایران 50 | 912 و 53
-     */
+    public function getDisplayColorAttribute(): ?string
+    {
+        if (filled($this->custom_color)) {
+            return $this->custom_color;
+        }
+
+        return $this->color?->name;
+    }
+
     public function getIranianPlateAttribute(): ?string
     {
         $provinceCode = trim((string) $this->plate_province_code);
@@ -83,5 +107,14 @@ class Vehicle extends Model
         }
 
         return trim("ایران {$provinceCode} | {$leftPart}");
+    }
+
+    public function getManufactureTypeLabelAttribute(): ?string
+    {
+        return match ($this->manufacture_type) {
+            'imported' => 'وارداتی',
+            'domestic' => 'تولید داخل',
+            default => null,
+        };
     }
 }
