@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -80,10 +81,7 @@ class VehicleResource extends Resource
                                 $vin = strtoupper(trim((string) $value));
 
                                 $exists = Vehicle::query()
-                                    ->whereRaw(
-                                        'LOWER(vin) = LOWER(?)',
-                                        [$vin]
-                                    )
+                                    ->whereRaw('LOWER(vin) = LOWER(?)', [$vin])
                                     ->exists();
 
                                 if ($exists) {
@@ -94,23 +92,18 @@ class VehicleResource extends Resource
                             },
                         ])
                         ->dehydrateStateUsing(
-                            fn (?string $state): ?string =>
-                                $state === null
-                                    ? null
-                                    : strtoupper(trim($state))
+                            fn (?string $state): ?string => $state === null
+                                ? null
+                                : strtoupper(trim($state))
                         )
                         ->extraInputAttributes([
                             'style' => 'text-transform: uppercase',
                             'maxlength' => 17,
                         ])
-                        ->helperText(
-                            'شماره VIN معمولاً ۱۷ کاراکتر است.'
-                        ),
-
+                        ->helperText('شماره VIN معمولاً ۱۷ کاراکتر است.'),
                     TextInput::make('chassis_number')
                         ->label('شماره شاسی')
                         ->maxLength(100),
-
                     TextInput::make('engine_number')
                         ->label('شماره موتور')
                         ->maxLength(100),
@@ -131,10 +124,7 @@ class VehicleResource extends Resource
                             'inputmode' => 'numeric',
                             'maxlength' => 2,
                         ])
-                        ->helperText(
-                            'دو رقم کد استان؛ صفر در این بخش مجاز است.'
-                        ),
-
+                        ->helperText('دو رقم کد استان؛ صفر در این بخش مجاز است.'),
                     TextInput::make('plate_three_digits')
                         ->label('عدد سه‌رقمی')
                         ->numeric()
@@ -146,10 +136,7 @@ class VehicleResource extends Resource
                             'inputmode' => 'numeric',
                             'maxlength' => 3,
                         ])
-                        ->helperText(
-                            'سه رقم؛ رقم اول نمی‌تواند صفر باشد.'
-                        ),
-
+                        ->helperText('سه رقم؛ رقم اول نمی‌تواند صفر باشد.'),
                     Select::make('plate_letter')
                         ->label('حرف پلاک')
                         ->options([
@@ -194,7 +181,6 @@ class VehicleResource extends Resource
                         ])
                         ->searchable()
                         ->native(false),
-
                     TextInput::make('plate_two_digits')
                         ->label('عدد دو رقمی')
                         ->numeric()
@@ -206,9 +192,7 @@ class VehicleResource extends Resource
                             'inputmode' => 'numeric',
                             'maxlength' => 2,
                         ])
-                        ->helperText(
-                            'دو رقم؛ رقم اول نمی‌تواند صفر باشد.'
-                        ),
+                        ->helperText('دو رقم؛ رقم اول نمی‌تواند صفر باشد.'),
                 ])
                 ->columns(4),
 
@@ -218,16 +202,13 @@ class VehicleResource extends Resource
                         ->label('برند')
                         ->required()
                         ->maxLength(100),
-
                     TextInput::make('model')
                         ->label('مدل')
                         ->required()
                         ->maxLength(100),
-
                     TextInput::make('trim')
                         ->label('تیپ یا مدل دقیق')
                         ->maxLength(100),
-
                     Select::make('body_style')
                         ->label('نوع بدنه')
                         ->options([
@@ -241,7 +222,6 @@ class VehicleResource extends Resource
                         ])
                         ->searchable()
                         ->native(false),
-
                     Select::make('manufacture_type')
                         ->label('نوع تولید')
                         ->options([
@@ -251,25 +231,20 @@ class VehicleResource extends Resource
                         ->live()
                         ->required()
                         ->native(false)
-                        ->helperText(
-                            'نوع سال واردشده را مشخص می‌کند.'
-                        ),
-
+                        ->helperText('نوع سال واردشده را مشخص می‌کند.'),
                     TextInput::make('manufacture_year')
                         ->label('سال ساخت')
                         ->numeric()
                         ->required()
                         ->minValue(
-                            fn (Get $get): int =>
-                                $get('manufacture_type') === 'domestic'
-                                    ? 1300
-                                    : 1900
+                            fn (Get $get): int => $get('manufacture_type') === 'domestic'
+                                ? 1300
+                                : 1900
                         )
                         ->maxValue(
-                            fn (Get $get): int =>
-                                $get('manufacture_type') === 'domestic'
-                                    ? self::currentJalaliYear() + 1
-                                    : now()->year + 1
+                            fn (Get $get): int => $get('manufacture_type') === 'domestic'
+                                ? self::currentJalaliYear() + 1
+                                : now()->year + 1
                         )
                         ->rules([
                             function (Get $get): \Closure {
@@ -282,10 +257,7 @@ class VehicleResource extends Resource
                                     $year = (int) $value;
 
                                     if ($type === 'imported') {
-                                        if (
-                                            $year < 1900
-                                            || $year > now()->year + 1
-                                        ) {
+                                        if ($year < 1900 || $year > now()->year + 1) {
                                             $fail(
                                                 'برای خودروی وارداتی، سال باید میلادی و بین ۱۹۰۰ تا '
                                                 . (now()->year + 1)
@@ -297,13 +269,9 @@ class VehicleResource extends Resource
                                     }
 
                                     if ($type === 'domestic') {
-                                        $maxJalali =
-                                            self::currentJalaliYear() + 1;
+                                        $maxJalali = self::currentJalaliYear() + 1;
 
-                                        if (
-                                            $year < 1300
-                                            || $year > $maxJalali
-                                        ) {
+                                        if ($year < 1300 || $year > $maxJalali) {
                                             $fail(
                                                 'برای خودروی تولید داخل، سال باید شمسی و بین ۱۳۰۰ تا '
                                                 . $maxJalali
@@ -314,67 +282,44 @@ class VehicleResource extends Resource
                                         return;
                                     }
 
-                                    $fail(
-                                        'ابتدا نوع تولید خودرو را انتخاب کنید.'
-                                    );
+                                    $fail('ابتدا نوع تولید خودرو را انتخاب کنید.');
                                 };
                             },
                         ])
                         ->helperText(
-                            fn (Get $get): string =>
-                                $get('manufacture_type') === 'domestic'
-                                    ? 'سال را به شمسی وارد کنید؛ مثال: ۱۴۰۵'
-                                    : 'سال را به میلادی وارد کنید؛ مثال: ۲۰۲۶'
+                            fn (Get $get): string => $get('manufacture_type') === 'domestic'
+                                ? 'سال را به شمسی وارد کنید؛ مثال: ۱۴۰۵'
+                                : 'سال را به میلادی وارد کنید؛ مثال: ۲۰۲۶'
                         ),
-
                     Select::make('color')
                         ->label('رنگ')
-                        ->options([
-                            'white' => 'سفید',
-                            'black' => 'مشکی',
-                            'silver' => 'نقره‌ای',
-                            'gray' => 'خاکستری',
-                            'dark_gray' => 'نوک‌مدادی',
-                            'pearl_white' => 'سفید صدفی',
-                            'cream' => 'کرم',
-                            'beige' => 'بژ',
-                            'gold' => 'طلایی',
-                            'brown' => 'قهوه‌ای',
-                            'red' => 'قرمز',
-                            'dark_red' => 'زرشکی',
-                            'blue' => 'آبی',
-                            'dark_blue' => 'سرمه‌ای',
-                            'light_blue' => 'آبی روشن',
-                            'green' => 'سبز',
-                            'dark_green' => 'سبز یشمی',
-                            'yellow' => 'زرد',
-                            'orange' => 'نارنجی',
-                            'purple' => 'بنفش',
-                            'other' => 'سایر',
-                        ])
+                        ->options(
+                            fn (Get $get): array => self::colorOptionsWithCurrentValue(
+                                $get('color')
+                            )
+                        )
                         ->searchable()
                         ->native(false)
                         ->live()
-                        ->dehydrateStateUsing(
-                            fn (?string $state, Get $get): ?string =>
-                                $state === 'other'
-                                    ? $get('custom_color')
-                                    : $state
-                        ),
-
+                        ->placeholder('رنگ خودرو را انتخاب کنید'),
                     TextInput::make('custom_color')
-                        ->label('رنگ جدید')
+                        ->label('رنگ سفارشی')
                         ->maxLength(50)
                         ->visible(
-                            fn (Get $get): bool =>
-                                $get('color') === 'other'
+                            fn (Get $get): bool => $get('color') === 'other'
+                                || filled($get('custom_color'))
                         )
-                        ->required(
-                            fn (Get $get): bool =>
-                                $get('color') === 'other'
+                        ->required(fn (Get $get): bool => $get('color') === 'other')
+                        ->live()
+                        ->afterStateUpdated(
+                            function (?string $state, Set $set): void {
+                                if (filled($state)) {
+                                    $set('color', trim($state));
+                                }
+                            }
                         )
-                        ->dehydrated(false),
-
+                        ->dehydrated(false)
+                        ->helperText('رنگ موردنظر را وارد کنید.'),
                     TextInput::make('current_mileage')
                         ->label('آخرین کیلومتر ثبت‌شده')
                         ->numeric()
@@ -394,17 +339,14 @@ class VehicleResource extends Resource
                     ->searchable()
                     ->copyable()
                     ->placeholder('ثبت نشده'),
-
                 TextColumn::make('brand')
                     ->label('برند')
                     ->searchable()
                     ->sortable(),
-
                 TextColumn::make('model')
                     ->label('مدل')
                     ->searchable()
                     ->sortable(),
-
                 TextColumn::make('body_style')
                     ->label('نوع بدنه')
                     ->formatStateUsing(
@@ -414,14 +356,11 @@ class VehicleResource extends Resource
                             'crossover' => 'کراس‌اوور',
                             'suv' => 'شاسی‌بلند',
                             'van' => 'ون',
-                            'single_cab_pickup' =>
-                                'وانت پیکاپ تک‌کابین',
-                            'double_cab_pickup' =>
-                                'وانت پیکاپ دوکابین',
+                            'single_cab_pickup' => 'وانت پیکاپ تک‌کابین',
+                            'double_cab_pickup' => 'وانت پیکاپ دوکابین',
                             default => '-',
                         }
                     ),
-
                 TextColumn::make('manufacture_type')
                     ->label('نوع تولید')
                     ->formatStateUsing(
@@ -431,51 +370,21 @@ class VehicleResource extends Resource
                             default => '-',
                         }
                     ),
-
                 TextColumn::make('manufacture_year')
                     ->label('سال ساخت')
                     ->placeholder('ثبت نشده'),
-
                 TextColumn::make('iranian_plate')
                     ->label('پلاک')
                     ->state(
-                        fn (Vehicle $record): string =>
-                            $record->iranian_plate ?? '-'
+                        fn (Vehicle $record): string => $record->iranian_plate ?? '-'
                     ),
-
                 TextColumn::make('color')
                     ->label('رنگ')
-                    ->formatStateUsing(
-                        fn (?string $state): string => match ($state) {
-                            'white' => 'سفید',
-                            'black' => 'مشکی',
-                            'silver' => 'نقره‌ای',
-                            'gray' => 'خاکستری',
-                            'dark_gray' => 'نوک‌مدادی',
-                            'pearl_white' => 'سفید صدفی',
-                            'cream' => 'کرم',
-                            'beige' => 'بژ',
-                            'gold' => 'طلایی',
-                            'brown' => 'قهوه‌ای',
-                            'red' => 'قرمز',
-                            'dark_red' => 'زرشکی',
-                            'blue' => 'آبی',
-                            'dark_blue' => 'سرمه‌ای',
-                            'light_blue' => 'آبی روشن',
-                            'green' => 'سبز',
-                            'dark_green' => 'سبز یشمی',
-                            'yellow' => 'زرد',
-                            'orange' => 'نارنجی',
-                            'purple' => 'بنفش',
-                            default => $state ?: 'ثبت نشده',
-                        }
-                    ),
-
+                    ->placeholder('ثبت نشده'),
                 TextColumn::make('current_mileage')
                     ->label('کیلومتر')
                     ->numeric()
                     ->placeholder('ثبت نشده'),
-
                 TextColumn::make('created_at')
                     ->label('تاریخ ثبت')
                     ->dateTime('Y/m/d H:i')
@@ -508,11 +417,54 @@ class VehicleResource extends Resource
         ];
     }
 
+    private static function colorOptions(): array
+    {
+        return [
+            'solid_white' => 'سفید ساده',
+            'pearl_white' => 'سفید صدفی',
+            'solid_black' => 'مشکی ساده',
+            'metallic_black' => 'مشکی متالیک',
+            'metallic_silver' => 'نقره‌ای متالیک',
+            'gray' => 'خاکستری',
+            'metallic_gray' => 'خاکستری متالیک',
+            'metallic_dark_gray' => 'خاکستری تیره متالیک',
+            'cream' => 'کرم',
+            'beige' => 'بژ',
+            'gold' => 'طلایی',
+            'brown' => 'قهوه‌ای',
+            'red' => 'قرمز',
+            'dark_red' => 'زرشکی',
+            'blue' => 'آبی',
+            'dark_blue' => 'سرمه‌ای',
+            'light_blue' => 'آبی روشن',
+            'green' => 'سبز',
+            'dark_green' => 'سبز تیره',
+            'yellow' => 'زرد',
+            'orange' => 'نارنجی',
+            'purple' => 'بنفش',
+            'other' => 'سایر',
+        ];
+    }
+
+    private static function colorOptionsWithCurrentValue(?string $current): array
+    {
+        $options = self::colorOptions();
+
+        if (
+            filled($current)
+            && $current !== 'other'
+            && ! array_key_exists($current, $options)
+        ) {
+            $options = [$current => $current] + $options;
+        }
+
+        return $options;
+    }
+
     private static function currentJalaliYear(): int
     {
         $gregorianYear = now()->year;
 
-        return $gregorianYear
-            - (now()->month >= 3 ? 621 : 622);
+        return $gregorianYear - (now()->month >= 3 ? 621 : 622);
     }
 }
